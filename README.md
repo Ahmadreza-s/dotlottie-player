@@ -31,13 +31,13 @@ dotLottie is an open-source file format that aggregates one or more Lottie files
 1. Install package using npm or yarn.
 
 ```shell
-npm install --save @ebcom/lottie-player
+npm install --save @ebcom/dotlottie-player
 ```
 
 2. Import package in your code.
 
 ```javascript
-import '@ebcom/lottie-player';
+import '@ebcom/dotlottie-player';
 ```
 
 ## Usage
@@ -74,7 +74,7 @@ player.load('http://dotlottieio.s3-website-us-east-1.amazonaws.com/sample_files/
 1 - import the player and use as follows
 
 ```javascript
-import '@ebcom/lottie-player';
+import '@ebcom/dotlottie-player';
 
 function App() {
   return (
@@ -97,7 +97,7 @@ export default App;
 1 - import as follows
 
 ```javascript
-import '@ebcom/lottie-player';
+import '@ebcom/dotlottie-player';
 
 function App() {
   return (
@@ -136,7 +136,7 @@ plugins: [{ src: '~/plugins/lottie-player', mode: 'client' }];
 2 - create a folder plugins in your root if it doesnt already exist, add a file lottie-player.js with the following content
 
 ```javascript
-import * as LottiePlayer from '@ebcom/lottie-player';
+import * as LottiePlayer from '@ebcom/dotlottie-player';
 ```
 
 3 - the component can now be used in your pages or components template tag as follows without any import necessary
