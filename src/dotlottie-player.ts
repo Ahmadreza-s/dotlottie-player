@@ -50,80 +50,76 @@ export function fetchPath(path: string): Record<string, any> {
 
   if (fileFormat === 'json') jsonFlag = true;
 
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', path, true);
-    if (jsonFlag) xhr.responseType = 'json';
-    else xhr.responseType = 'arraybuffer';
-    xhr.send();
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState == 4 && xhr.status == 200) {
-        if (jsonFlag) {
-          resolve(xhr.response);
-        }
-        JSZip.loadAsync(xhr.response)
-          .then((zip: any) => {
+  return new Promise(async (resolve, reject) => {
+    const response = await fetch(path, {
+      mode: 'no-cors'
+    });
+    if(jsonFlag){
+      resolve(await response.json())
+    }
+    const blobData = await response.blob();
+
+    JSZip.loadAsync(blobData)
+      .then((zip: any) => {
+        zip
+          .file('manifest.json')
+          .async('string')
+          .then((manifestFile: string) => {
+            const manifest = JSON.parse(manifestFile);
+
+            if (!('animations' in manifest)) {
+              throw new Error('Manifest not found');
+            }
+
+            if (manifest.animations.length === 0) {
+              throw new Error('No animations listed in the manifest');
+            }
+
+            const defaultLottie = manifest.animations[0];
+
             zip
-              .file('manifest.json')
+              .file(`animations/${defaultLottie.id}.json`)
               .async('string')
-              .then((manifestFile: string) => {
-                const manifest = JSON.parse(manifestFile);
+              .then((lottieFile: string) => {
+                const lottieJson = JSON.parse(lottieFile);
 
-                if (!('animations' in manifest)) {
-                  throw new Error('Manifest not found');
-                }
+                if ('assets' in lottieJson) {
+                  Promise.all(
+                    lottieJson.assets.map((asset: any) => {
+                      if (!asset.p) {
+                        return;
+                      }
+                      if (zip.file(`images/${asset.p}`) == null) {
+                        return;
+                      }
 
-                if (manifest.animations.length === 0) {
-                  throw new Error('No animations listed in the manifest');
-                }
+                      return new Promise((resolveAsset: any) => {
+                        const assetFileExtension = asset.p.split('.').pop();
 
-                const defaultLottie = manifest.animations[0];
+                        zip
+                          .file(`images/${asset.p}`)
+                          .async('base64')
+                          .then((assetB64: any) => {
+                            if (assetFileExtension === 'svg' || assetFileExtension === 'svg+xml')
+                              asset.p = 'data:image/svg+xml;base64,' + assetB64;
+                            else asset.p = 'data:;base64,' + assetB64;
 
-                zip
-                  .file(`animations/${defaultLottie.id}.json`)
-                  .async('string')
-                  .then((lottieFile: string) => {
-                    const lottieJson = JSON.parse(lottieFile);
+                            asset.e = 1;
 
-                    if ('assets' in lottieJson) {
-                      Promise.all(
-                        lottieJson.assets.map((asset: any) => {
-                          if (!asset.p) {
-                            return;
-                          }
-                          if (zip.file(`images/${asset.p}`) == null) {
-                            return;
-                          }
-
-                          return new Promise((resolveAsset: any) => {
-                            const assetFileExtension = asset.p.split('.').pop();
-
-                            zip
-                              .file(`images/${asset.p}`)
-                              .async('base64')
-                              .then((assetB64: any) => {
-                                if (assetFileExtension === 'svg' || assetFileExtension === 'svg+xml')
-                                  asset.p = 'data:image/svg+xml;base64,' + assetB64;
-                                else asset.p = 'data:;base64,' + assetB64;
-
-                                asset.e = 1;
-
-                                resolveAsset();
-                              });
+                            resolveAsset();
                           });
-                        }),
-                      ).then(() => {
-                        resolve(lottieJson);
                       });
-                    }
+                    }),
+                  ).then(() => {
+                    resolve(lottieJson);
                   });
+                }
               });
-          })
-          .catch((err: Error) => {
-            reject(err);
           });
-      }
-    };
+      })
+      .catch((err: Error) => {
+        reject(err);
+      });
   });
 }
 
