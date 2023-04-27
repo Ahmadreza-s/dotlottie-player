@@ -54,9 +54,11 @@ export function fetchPath(path: string): Record<string, any> {
     const response = await fetch(path, {
       mode: 'no-cors'
     });
+    console.log('response received', response);
     if(jsonFlag){
       resolve(await response.json())
     }
+    console.log('response is blob');
     const blobData = await response.blob();
 
     JSZip.loadAsync(blobData)
@@ -118,6 +120,7 @@ export function fetchPath(path: string): Record<string, any> {
           });
       })
       .catch((err: Error) => {
+        console.log('error', err);
         reject(err);
       });
   });
@@ -283,6 +286,7 @@ export class DotLottiePlayer extends LitElement {
     if (!this.shadowRoot) {
       return;
     }
+    console.log('this.src', this.src, 'this.animationData', this.animationData);
 
     const options: any = {
       container: this.container,
