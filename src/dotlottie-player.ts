@@ -205,6 +205,12 @@ export class DotLottiePlayer extends LitElement {
   public src?: string;
 
   /**
+   * local JSON data
+   */
+  @property({type: String})
+  public animationData?: string;
+
+  /**
    * Player state.
    */
   @property({ type: String })
@@ -270,7 +276,8 @@ export class DotLottiePlayer extends LitElement {
    * Configure and initialize lottie-web player instance.
    */
   public async load(
-    src: string | Record<string, unknown>,
+    src: any,
+    animationData: any,
     overrideRendererSettings?: Record<string, unknown>,
   ): Promise<void> {
     if (!this.shadowRoot) {
@@ -294,7 +301,7 @@ export class DotLottiePlayer extends LitElement {
 
     // Load the resource information
     try {
-      let srcParsed = this.parseSrc(src);
+      let srcParsed = animationData ? JSON.parse(animationData) : this.parseSrc(src);
 
       if (typeof srcParsed === 'string') {
         // parseSrc returned a URL
@@ -646,8 +653,8 @@ export class DotLottiePlayer extends LitElement {
     }
 
     // Setup lottie player
-    if (this.src) {
-      await this.load(this.src);
+    if (this.src || this.animationData) {
+      await this.load(this.src, this.animationData);
     }
   }
 
